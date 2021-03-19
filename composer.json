@@ -1,0 +1,17 @@
+{
+    "name": "illmy/inkfly",
+    "description": "inkfly",
+    "type": "project",
+    "require": {
+        "php": ">=7.1.0",
+        "illmy/ink": "dev-master"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "illmy",
+            "email": "1549441501@qq.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
