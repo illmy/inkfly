@@ -6,6 +6,11 @@
         "php": ">=7.1.0",
         "illmy/ink": "dev-master"
     },
+    "autoload": {
+        "psr-4": {
+            "app\\": "app"
+        }
+    },
     "license": "MIT",
     "authors": [
         {
