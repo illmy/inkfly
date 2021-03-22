@@ -2,24 +2,25 @@
 
 namespace app\controller;
 
-use elaborate\Application;
+use app\model\Index as IndexModel;
 
-class Index 
+class Index extends Base
 {
-    protected $app;
-
-    public function __construct(Application $app)
+    public function index(IndexModel $model)
     {
-        $this->app = $app;
+        // $list = $this->app->db->table('users')->where('id', '=', '1')->find();
+        // var_dump($list);
+        $json = ['ces' => 'ok'];
+        $list = $model->list();
+        var_dump($list);
+        return json($json);
     }
 
-    public function index()
+    public function list()
     {
-        $list = $this->app->db->table('users')->where('id', '=', '1')->find();
-        var_dump($list);
-        $list = $this->app->db->table('users')->where('id', '=', '2')->where('id', '=', '3')->find();
-        var_dump($list);
-        $json = ['ces' => 'ok'];
+        $json = ['ces' => 'okgggg'];
+        $username = $this->request->param('username');
+        echo $username;
         return json($json);
     }
 }

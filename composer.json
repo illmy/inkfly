@@ -4,7 +4,8 @@
     "type": "project",
     "require": {
         "php": ">=7.1.0",
-        "illmy/ink": "dev-master"
+        "illmy/ink": "dev-master",
+        "firebase/php-jwt": "dev-master"
     },
     "autoload": {
         "psr-4": {
