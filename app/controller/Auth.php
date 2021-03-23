@@ -19,7 +19,8 @@ class Auth extends Base
         $accessToken = Jwt::encode($result);
 
         $res = [
-            'access_token' => $accessToken
+            'token' => $accessToken,
+            'user_info' => $result
         ];
 
         return $this->success($res);

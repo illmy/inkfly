@@ -4,21 +4,23 @@ namespace app\controller;
 
 use elaborate\Controller;
 use app\exceptions\InvalidRequestException;
+use app\tools\Jwt;
 
 class Base extends Controller
 {
     protected $requestParam = [];
 
-    protected $validateErrorMsg = '';
+    protected $userData = [];
 
     protected function initialize()
     {
-        $this->requestParam = $this->request->param('', '', 'htmlspecialchars,addsalashes');
-    }
+        $token = $this->request->header('X-Token');
+        $this->userData = Jwt::decode($token);
+        $this->requestParam = $this->request->param('', '', 'addslashes,htmlspecialchars');
 
-    protected function getRequestParam(string $name = '', $default = null) 
-    {
-
+        if (isset($this->requestParam['token'])) {
+            unset($this->requestParam['token']);
+        }
     }
 
     protected function success(array $data = [], string $msg = '')
@@ -26,7 +28,8 @@ class Base extends Controller
         $data = [
             'code' => 0,
             'msg' => $msg,
-            'data' => $data
+            'data' => $data,
+            'count' => count($data)
         ];
         
         return json($data);
