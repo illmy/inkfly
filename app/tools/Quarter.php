@@ -36,10 +36,27 @@ class Quarter
             $month = date("m", $timeYearMonth);
             $quarter = self::$mapping[$month];
             $mark = $year . $quarter;
-            $arr = ['year' => $year, 'quarter' => $quarter, 'mark' => $mark];
+            $arr = ['year' => $year, 'quarter' => $quarter, 'year_quarter' => $mark];
             self::$data[$mark] = $arr;
+
+            $yearMonth = date("Y-m", strtotime("+1 month", $timeYearMonth));
         }
 
         return self::$data;
+    }
+
+    public static function getNowQuarter(string $nowDate = '')
+    {
+        if (empty($nowDate)) {
+            $year = date("Y");
+            $month = date("m");
+        } else {
+            $strtime = strtotime($nowDate);
+            $year = date("Y", $strtime);
+            $month = date("m", $strtime);
+        }
+        $yearQuarter = $year . self::$mapping[$month];
+
+        return ['year' => $year, 'quarter' => self::$mapping[$month], 'year_quarter' => $yearQuarter];
     }
 }

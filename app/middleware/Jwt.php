@@ -14,6 +14,12 @@ class Jwt
 {
     public static function handle($request, \Closure $next)
     {
+        $con = $request->controller();
+        $controller = ['Index', 'Test'];
+        if (in_array($con, $controller)) {
+            return $next($request);
+        }
+
         $act = $request->action();
         $action = ['login', 'test'];
         if (in_array($act, $action)) {

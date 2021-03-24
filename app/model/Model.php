@@ -22,7 +22,7 @@ class Model extends ModelBase
 
     protected $queryGroupField = '';
 
-    public function initUser(array $userData = [])
+    public function initData(array $userData = [])
     {
         $this->userData = $userData;
 
@@ -36,8 +36,13 @@ class Model extends ModelBase
         foreach ($this->queryWhereField as $whereField) {
             
             [$field, $op, $val] = $whereField;
-            if (!empty($query[$field]) || $query[$field] == '0') {
-                $this->where($field, $op, str_replace('%VALUE%', [$query[$field]], $val));
+            if (strpos('.', $field)) {
+                $fld = explode('.', $field)[1];
+            } else {
+                $fld = $field;
+            }
+            if (!empty($query[$fld]) || $query[$fld] == '0') {
+                $this->where($field, $op, str_replace('%VALUE%', [$query[$fld]], $val));
             }
         }
 

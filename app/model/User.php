@@ -2,7 +2,6 @@
 
 namespace app\model;
 
-use elaborate\orm\Model;
 use app\exceptions\InvalidRequestException;
 
 class User extends Model
@@ -10,6 +9,10 @@ class User extends Model
     const USER_STATE_DISABLE = 0;
 
     const USER_STATE_ENABLE = 1;
+
+    const IS_ADMIN = 1;
+
+    const NO_ADMIN = 0;
 
     protected $table = 'users';
 
@@ -39,35 +42,53 @@ class User extends Model
     {
         // 判断部门是否存在
         $department = new Department();
-        $departList = $department->where('company_id', '=', $this->username['company_id'])
+        $departList = $department->where('company_id', '=', $this->userData['company_id'])
                         ->where('id', '=', $data['department_id'])->find();
         if (empty($departList)) {
             throw new InvalidRequestException("部门不存在");
         }
 
+        $data['company_admin'] = $data['company_admin'] ?? 0;
+        if (!in_array($data['company_admin'], [self::IS_ADMIN, self::NO_ADMIN])) {
+            $data['company_admin'] = self::NO_ADMIN;
+        }
+
         $data = [
-            'company_id' => $this->username['company_id'],
+            'company_id' => $this->userData['company_id'],
             'username' => $data['username'],
             'password' => md5($data['password']),
             'nickname' => $data['nickname'],
+            'department_id' => $data['department_id'],
             'company_admin' => $data['company_admin'],
-            'created_by' => $this->username['username'],
+            'created_by' => $this->userData['username'],
             'created_at' => date('Y-m-d H:i:s')
         ];
 
         // 判断用户名是否存在
         $exists = $this->where('username', '=', $data['username'])->find();
-        if (!$exists) {
+        if ($exists) {
             throw new InvalidRequestException('用户名已被注册');
         }
 
         $result = $this->insert($data);
 
         if ($result) {
+            unset($data['password']);
             return $data;
         }
 
         throw new InvalidRequestException("新增失败");    
+    }
+
+    public function info(string $id) 
+    {
+        $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $id)->find();
+
+        if (empty($exists)) {
+            throw new InvalidRequestException('员工不存在');
+        }
+
+        return $exists;
     }
 
     public function editor(array $data = [])
@@ -75,14 +96,28 @@ class User extends Model
         if (empty($data['id'])) {
             throw new InvalidRequestException('员工不存在');
         }
+        // 判断部门是否存在
+        $department = new Department();
+        $departList = $department->where('company_id', '=', $this->userData['company_id'])
+                        ->where('id', '=', $data['department_id'])->find();
+        if (empty($departList)) {
+            throw new InvalidRequestException("部门不存在");
+        }
+
+        $data['company_admin'] = $data['company_admin'] ?? 0;
+        if (!in_array($data['company_admin'], [self::IS_ADMIN, self::NO_ADMIN])) {
+            $data['company_admin'] = self::NO_ADMIN;
+        }
+
         $data = [
             'nickname' => $data['nickname'],
             'department_id' => $data['department_id'],
-            'updated_by' => $this->username['username'],
+            'company_admin' => $data['company_admin'] ?? 0,
+            'updated_by' => $this->userData['username'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $exists = $this->where('company_id', '=', $this->username['company_id'])->where('id', '=', $data['id'])->find();
+        $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $data['id'])->find();
         if (!$exists) {
             throw new InvalidRequestException('员工不存在');
         }
@@ -93,7 +128,7 @@ class User extends Model
 
     public function delete($id)
     {
-        $exists = $this->where('company_id', '=', $this->username['company_id'])->where('id', '=', $id)->find();
+        $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $id)->find();
         if (empty($exists)) {
             throw new InvalidRequestException('查询不到该数据');
         }
@@ -101,5 +136,14 @@ class User extends Model
         $result = $this->where('id', '=', $id)->delete();
 
         return $exists;
+    }
+
+    public function getAllManager()
+    {
+        $sql = "select * from users where id in (select manager_id from departments where manager_id > 0)";
+
+        $list = $this->query($sql);
+
+        return $list;
     }
 }

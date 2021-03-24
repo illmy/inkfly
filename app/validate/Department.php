@@ -5,7 +5,7 @@ namespace app\validate;
 class Department
 {
     protected $createRules = [
-        'dept_name' => 'require|length:4,16',
+        'dept_name' => 'require|length:2,16',
         'parent_id' => 'require|number',
         'manager_id' => 'number'
     ];

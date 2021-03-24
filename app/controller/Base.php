@@ -65,6 +65,9 @@ class Base extends Controller
         foreach ($rules as $key => $val) {
             $childRule = explode('|', $val);
             foreach ($childRule as $child) {
+                if (!isset($data[$key]) && !in_array('require', $childRule)) {
+                    continue;
+                }
                 if (strpos($child, ':')) {
                     [$name, $rule] = explode(':', $child);
                     $result = $$name($key, $rule, $data[$key] ?? '');

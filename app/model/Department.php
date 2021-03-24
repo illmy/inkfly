@@ -6,7 +6,6 @@
 
 namespace app\model;
 
-use elaborate\orm\Model;
 use app\exceptions\InvalidRequestException;
 
 class Department extends Model
@@ -36,17 +35,17 @@ class Department extends Model
     public function create(array $data = []): array
     {
         // 判断parent是否存在
-        $list = $this->where('company_id', '=', $this->username['company_id'])->where('id', '=', $data['parent_id'])->find();
+        $list = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $data['parent_id'])->find();
         if (empty($list)) {
             throw new InvalidRequestException("上级部门不存在");
         }
 
         $data = [
-            'company_id' => $this->username['company_id'],
+            'company_id' => $this->userData['company_id'],
             'dept_name' => $data['dept_name'],
             'parent_id' => $data['parent_id'],
             'manager_id' => $data['manager_id'] ?? 0,
-            'created_by' => $this->username['username'],
+            'created_by' => $this->userData['username'],
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -55,9 +54,12 @@ class Department extends Model
         $this->checkData($data);
 
         // 一个人只能担任一个部门经理
-        $list = $this->where('company_id', '=', $this->username['company_id'])->where('manager_id', '=', $data['manager_id'])->find();
-        if (!empty($list)) {
-            throw new InvalidRequestException("已经是部门经理");
+        if (!empty($data['manager_id'])) {
+            $user = $this->where('company_id', '=', $this->userData['company_id'])->where('manager_id', '=', $data['manager_id'])->find();
+            if (!empty($user)) {
+                throw new InvalidRequestException("已经是部门经理");
+            }
+            
         }
         
         $result = $this->insert($data);
@@ -69,36 +71,69 @@ class Department extends Model
         throw new InvalidRequestException("新增失败");
     }
 
+    public function info(string $id) 
+    {
+        $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $id)->find();
+
+        if (empty($exists)) {
+            throw new InvalidRequestException('部门不存在');
+        }
+
+        return $exists;
+    }
+
     public function editor(array $data = [])
     {
         if (empty($data['id'])) {
             throw new InvalidRequestException('部门不存在');
         }
-        $data = [
+        $init = [
             'dept_name' => $data['dept_name'],
             'parent_id' => $data['parent_id'],
             'manager_id' => $data['manager_id'] ?? 0,
-            'updated_by' => $this->username['username'],
+            'updated_by' => $this->userData['username'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        $exists = $this->where('company_id', '=', $this->username['company_id'])->where('id', '=', $data['id'])->find();
+        $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $data['id'])->find();
         if (!$exists) {
             throw new InvalidRequestException('部门不存在');
         }
 
+        
+        // 同级部门不能出现相同名称的部门
+        $this->checkData($data);
+
+        // 一个人只能担任一个部门经理
+        if (!empty($data['manager_id'])) {
+            $user = $this->where('company_id', '=', $this->userData['company_id'])
+                    ->where('id', '<>', $data['id'])
+                    ->where('manager_id', '=', $data['manager_id'])
+                    ->find();
+            if (!empty($user)) {
+                throw new InvalidRequestException("已经是部门经理");
+            }
+            
+        }
+
         // 不能是下级部门 或 自己本身
-        $child = $this->getChildDepart($data['parent_id']);
-        if (in_array($data['id'], $child)) {
+        $child = $this->getChildDepart($data['id']);
+        if (in_array($data['parent_id'], $child)) {
             throw new InvalidRequestException('上级部门不能是本身和下级部门');
         }
         
-        return $this->where('id', '=', $data['id'])->update($data);
+        $result = $this->where('id', '=', $data['id'])->update($init);
+
+        if ($result) {
+            return $data;
+        }
+
+        throw new InvalidRequestException("编辑失败");
     }
 
     public function getChildDepart($id, $isSelf = true)
     {
-        $list = $this->where('company_id', '=', $this->username['company_id'])->select();
+        $list = $this->where('company_id', '=', $this->userData['company_id'])->select();
 
         $arr = $this->getLoopDepart($id, $list);
 
@@ -128,13 +163,13 @@ class Department extends Model
 
     public function delete($id)
     {
-        $exists = $this->where('company_id', '=', $this->username['company_id'])->where('id', '=', $id)->find();
+        $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $id)->find();
         if (empty($exists)) {
             throw new InvalidRequestException('查询不到该数据');
         }
         //部门下有员工，则无法删除
         $user = new User();
-        $userList = $user->where('company_id', '=', $this->username['company_id'])->where('department_id', '=', $id)->find();
+        $userList = $user->where('company_id', '=', $this->userData['company_id'])->where('department_id', '=', $id)->find();
         if ($userList) {
             throw new InvalidRequestException('该部门下已有员工，无法删除');
         }
@@ -157,7 +192,7 @@ class Department extends Model
             $where[] = ['id', '<>', $data['id']];
         }
 
-        $where[] = ['company_id', '=', $this->username['company_id']];
+        $where[] = ['company_id', '=', $this->userData['company_id']];
         $where[] = ['parent_id', '=', $data['parent_id']];
 
         $column = [
