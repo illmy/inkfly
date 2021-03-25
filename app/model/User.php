@@ -82,7 +82,11 @@ class User extends Model
 
     public function info(string $id) 
     {
-        $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $id)->find();
+        $field = ['company_id', 'username', 'nickname', 'department_id', 'company_admin'];
+        $exists = $this->where('company_id', '=', $this->userData['company_id'])
+                        ->where('id', '=', $id)
+                        ->field($field)
+                        ->find();
 
         if (empty($exists)) {
             throw new InvalidRequestException('员工不存在');

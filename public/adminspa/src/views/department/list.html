@@ -1,0 +1,158 @@
+<script type="text/html" template>
+  <link rel="stylesheet" href="{{ layui.setter.base }}style/bootstrapStyle.css?v={{ layui.admin.v }}-1" media="all">
+  <link rel="stylesheet" href="{{ layui.setter.base }}style/klt_department/list.css?v={{ layui.admin.v }}-1" media="all">
+</script>
+<title>组织架构管理</title>
+  
+<div class="layui-card layadmin-header">
+	<div class="layui-breadcrumb" lay-filter="breadcrumb">
+		<a lay-href="">主页</a>
+		<a><cite>平台商管理</cite></a>
+		<a><cite>组织架构管理</cite></a>
+	</div>
+</div>
+
+<div class="layui-fluid klt-department-fluid">
+    <div class="layui-row layui-col-space15">
+      <div class="layui-col-md3">
+        <div class="layui-card">
+          <div class="layui-card-header">组织架构</div>
+          <div class="layui-card-body klt-department-body">
+            <ul id="treeDemo" class="ztree">
+          </div>
+        </div>
+      </div>
+      
+      <div class="layui-col-md9">
+        <div class="layui-card">
+          <div class="layui-card-header"><span id="res-department-name"></span>下属员工列表</div>
+          <div class="layui-card-body klt-department-body">
+            <div class="layui-card">
+
+              <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-useradmin-formlist">
+                <input type="hidden" id="department-form-departid" name="department_id">
+                <div class="layui-form-item">
+                  <!-- <div class="layui-inline">
+                    <label class="layui-form-label">部门名称</label>
+                    <div class="layui-input-block">
+                      <input type="text" name="dept_name" placeholder="请输入部门名称" autocomplete="off" class="layui-input">
+                    </div>
+                  </div> -->
+                  <div class="layui-inline">
+                    <!-- <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="LAY-user-back-search">
+                      <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button> -->
+					          <button class="layui-btn layuiadmin-btn-admin" data-type="add">添加部门</button>
+                    <button class="layui-btn layuiadmin-btn-admin" data-type="add">添加员工</button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="layui-card-body">
+                <!--div style="padding-bottom: 10px;">
+                  <button class="layui-btn layuiadmin-btn-admin" data-type="batchdel">删除</button>
+                  <button class="layui-btn layuiadmin-btn-admin" data-type="add">添加</button>
+                </div-->
+                
+                <table id="Filter-table-department" lay-filter="Filter-table-department"></table>  
+                
+                <script type="text/html" id="ID_table_toolbar_department">
+                  <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+                  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>
+                </script>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  
+  <script>
+  layui.use('department', layui.factory('department')).use(['admin', 'department', 'table'], function(){
+    var $ = layui.$
+    ,admin = layui.admin
+    ,view = layui.view
+    ,table = layui.table
+    ,form = layui.form
+    ,klt_department = layui.department
+    var loginTbData = layui.data('loginData');
+    
+    form.render(null, 'layadmin-useradmin-formlist');
+    
+    //监听搜索
+    form.on('submit(LAY-user-back-search)', function(data){
+      var field = data.field;
+      
+      //执行重载
+      table.reload('Filter-table-department', {
+        where: field
+      });
+    });
+
+    //事件
+    var active = {
+      batchdel: function(){
+        var checkStatus = table.checkStatus('LAY-user-back-manage')
+        ,checkData = checkStatus.data; //得到选中的数据
+
+        if(checkData.length === 0){
+          return layer.msg('请选择数据');
+        }
+        
+        layer.prompt({
+          formType: 1
+          ,title: '敏感操作，请验证口令'
+        }, function(value, index){
+          layer.close(index);
+          
+          layer.confirm('确定删除吗？', function(index) {
+            
+            //执行 Ajax 后重载
+            /*
+            admin.req({
+              url: 'xxx'
+              //,……
+            });
+            */
+            table.reload('Filter-table-department');
+            layer.msg('已删除');
+          });
+        }); 
+      }
+      ,add: function(){
+        admin.popup({
+          title: '新增',
+          area: ['675px', '550px'],
+          id: 'LAY-popup-user-add',
+          btn: ['确定', '取消'],
+          btnAlign: 'r',
+          success: function success(layero, index) {
+              layui.admin.INDEXS = index;
+              view(this.id).render('operator/add').done(function () {
+                  form.render(null, 'operator-add-form-add');
+              });
+          },
+          yes: function yes(index, layero) {
+              //点击确认触发 iframe 内容中的按钮提交
+              var submit = $("#operator-add-submit-add");
+              submit.click();
+          }
+        });
+      }
+    }  
+    $('.layui-btn.layuiadmin-btn-admin').on('click', function(){
+      var type = $(this).data('type');
+      active[type] ? active[type].call(this) : '';
+    });
+
+  });
+  </script>
+  <style>
+    #treeDemo_1_remove{display: none;}
+  </style>
+  
+  

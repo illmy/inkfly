@@ -58,6 +58,11 @@ layui.use(['admin', 'form', 'user'], function(){
           key: setter.request.tokenName
           ,value: res.data.token
         });
+
+        layui.data(layui.setter.tableName, {
+          key: 'userData',
+          value: res.data.user_info
+        });
         
         //登入成功的提示与跳转
         layer.msg('登入成功', {
@@ -65,7 +70,7 @@ layui.use(['admin', 'form', 'user'], function(){
           ,icon: 1
           ,time: 1000
         }, function(){
-          location.hash = search.redirect ? decodeURIComponent(search.redirect) : '/';
+          location.hash = res.data.console ? '/' + res.data.console : (search.redirect ? decodeURIComponent(search.redirect) : '/');
         });
       }
     });

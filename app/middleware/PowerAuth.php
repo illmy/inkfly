@@ -1,17 +1,17 @@
 <?php
 
 /**
- * jwt中间件验证
- * 
+ * 权限验证
  */
 
 namespace app\middleware;
 
 use app\tools\Jwt as Jswt;
+use app\tools\Auth;
 use elaborate\Response;
 use app\exceptions\InvalidRequestException;
 
-class Jwt
+class PowerAuth
 {
     public static function handle($request, \Closure $next)
     {
@@ -30,7 +30,11 @@ class Jwt
             $token = $request->param('X-Token');
         }
         $decoded = Jswt::decode($token);
-        if (is_array($decoded)) {
+
+        $rule = strtolower($con . '/' . $act);
+        $result = (new Auth())->check($rule, $decoded['id']);
+
+        if ($result) {
             return $next($request);
         } else {
             throw new InvalidRequestException('未授权访问', 1002);
@@ -40,7 +44,7 @@ class Jwt
     private static function whiteListController()
     {
         $controller = [
-            'Index', 'Test'
+            'Index', 'Test', 'Init'
         ];
         return $controller;
     }

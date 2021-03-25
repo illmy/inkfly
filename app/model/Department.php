@@ -13,10 +13,11 @@ class Department extends Model
     protected $table = 'departments';
 
     protected $queryWhereField = [
-        ['d.dept_name', 'like', '%VALUE%']
+        ['parent_id', '=', '%VALUE%'],
+        ['dept_name', 'like', '%%VALUE%%']
     ];
 
-    protected $queryShowField = ['*'];
+    protected $queryShowField = ['id', 'parent_id', 'dept_name as name', 'created_at'];
 
     protected $queryOrderField = [
         ['id', 'desc']
@@ -26,9 +27,9 @@ class Department extends Model
 
     public function beforeList($query = [])
     {
-        $this->alias('d');
-        $this->leftJoin('users as u', 'u.id', 'd.manager_id');
-        $this->where('d.company_id', '=', $this->userData['company_id']);
+        // $this->alias('d');
+        // $this->leftJoin('users as u', 'u.id', 'd.manager_id');
+        $this->where('company_id', '=', $this->userData['company_id']);
 
     }
 

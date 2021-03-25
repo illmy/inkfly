@@ -42,7 +42,7 @@ class Model extends ModelBase
                 $fld = $field;
             }
             if (!empty($query[$fld]) || $query[$fld] == '0') {
-                $this->where($field, $op, str_replace('%VALUE%', [$query[$fld]], $val));
+                $this->where($field, $op, str_replace('%VALUE%', $query[$fld], $val));
             }
         }
 
@@ -56,13 +56,16 @@ class Model extends ModelBase
                 $this->orderBy($su . $field, $query['order_way'] ?? 'asc');
             }
         }
+
         if ($isPage) {
             $page = !empty($query['page']) ?: 1;
-            $pageSize = !empty($query['page']) ?: $this->pageSize;
+            $pageSize = !empty($query['limit']) ? $query['limit'] : $this->pageSize;
             $start = ($page - 1) * $pageSize;
             $this->limit($start, $pageSize);
         }
-        return $this->select();
+        $result = $this->select();
+
+        return $result;
     }
 
     protected function beforeList($query = [])

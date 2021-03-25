@@ -1,0 +1,98 @@
+<title>新增部门</title>
+<div class="layui-form" lay-filter="operator-add-form-add" id="operator-add-form-add" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>坐席组名</label>
+        <div class="layui-input-block">
+            <input type="text" name="name" lay-verify="required" maxlength="20" placeholder="请输入坐席组名" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">添加坐席</label>
+        <div class="layui-input-block">
+            <select name="optid" xm-select="operator-assignoindexgroup-select-1" lay-verify="operator-assignoindexgroup-select-1" xm-select-search="">
+                <option value="">请选择坐席</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>分配策略</label>
+        <div class="layui-input-block">
+            <select name="looptype" lay-verify="required">
+                <option value="">请选择</option>
+                <option value="1">最小服务时长优先</option>
+                <option value="2">最少服务次数优先</option>
+                <option value="3">最大服务间隔优先</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">排队时长</label>
+        <div class="layui-input-block">
+            <input type="number" name="waitingtime" lay-verify="" placeholder="请输入排队时长，等待超时转至下一个坐席，默认30秒"
+                   autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">描述</label>
+        <div class="layui-input-block">
+            <input type="text" name="description" placeholder="请输入描述" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="operator-add-submit-add" id="operator-add-submit-add" value="确认添加">
+        <input type="button" lay-submit lay-filter="operator-add-edit-add" id="operator-add-edit-add" value="确认编辑">
+    </div>
+</div>
+
+<script>
+    layui.use(['index', 'form','formSelects'], function () {
+        var $ = layui.$,
+            form = layui.form,
+            admin = layui.admin,
+            api = layui.api,
+            layer = layui.layer,
+            formSelects=layui.formSelects;
+        //监听提交
+
+        form.on('submit(operator-add-submit-add)', function (data) {
+            var field = data.field; //获取提交的字段
+            //提交 Ajax 成功后，关闭当前弹层并重载表格
+            admin.req({
+                url: api.OperatorAdd,
+                data: field,
+                type: 'post',
+                done: function done(res) {
+                    //登入成功的提示与跳转
+                    layer.msg(res.msg, {
+                        icon: 1,
+                        time: 1000
+                    }, function () {
+                        layui.table.reload('operator-index-table-1', {
+                            page: {
+                                curr: 1 //重新从第一页开始
+                            },
+                            method: 'post'
+                        });
+                        layui.admin.INDEXS ? layui.layer.close(layui.admin.INDEXS) : layui.layer.closeAll('page');
+                        layui.admin.INDEXS = null;
+                    });
+                }
+            });
+        });
+        //获取下拉选择的坐席列表
+        formSelects.data('operator-assignoindexgroup-select-1', 'server', {
+            url: api.getAssignOperatorList+"?model=Operator&field=id as value,name&where=&optgroupid=&access_token="+ layui.data(layui.setter.tableName).access_token,
+            beforeSuccess: function (id, url, searchVal, result) {
+                result = result.data;
+                return result;
+            },
+            success: function (id, url, searchVal, result) {
+            }
+        });
+
+    });
+
+</script>

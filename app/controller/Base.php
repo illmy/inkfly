@@ -15,11 +15,14 @@ class Base extends Controller
     protected function initialize()
     {
         $token = $this->request->header('X-Token');
+        if (empty($token)) {
+            $token = $this->request->param('X-Token');
+        }
         $this->userData = Jwt::decode($token);
         $this->requestParam = $this->request->param('', '', 'addslashes,htmlspecialchars');
 
-        if (isset($this->requestParam['token'])) {
-            unset($this->requestParam['token']);
+        if (isset($this->requestParam['X-Token'])) {
+            unset($this->requestParam['X-Token']);
         }
     }
 

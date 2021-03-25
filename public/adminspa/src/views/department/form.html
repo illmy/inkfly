@@ -1,0 +1,334 @@
+<!-- 新增用户 -->
+<script type="text/html" template>
+    <link rel="stylesheet" href="{{ layui.setter.base }}lib/extend/formSelects/formSelects.css?v={{ layui.admin.v }}-1">
+</script>
+<style>
+    /* 多选框 */
+    .xm-select-parent .xm-select-title div.xm-select-label > span {
+        height: auto !important;
+    }
+
+    .xm-select-parent .xm-select-title div.xm-select-label > span font {
+        display: inline-block
+    }
+</style>
+<div>
+    <div class="layui-form" lay-filter="member-add-form-add" id="member-add-form-add">
+        <div class="first-step">
+            <div>基本信息</div>
+            <div class="layui-form-item">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>用户名称</label>
+                <div class="layui-input-block">
+                    <script type="text/html" template >
+                        <input type="hidden" name="upuserid" value="{{layui.data(layui.setter.tableName)['userData']['useradminid']}}">
+                    </script>
+                    <input type="text" name="username" maxlength="20" lay-verify="required" placeholder="请输入用户名称" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>登录账号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="loginname" maxlength="20" onKeyUp="value=value.replace(/[\W]/g,'')" lay-verify="required|loginname" placeholder="请输入登录账号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>密码</label>
+                <div class="layui-input-block">
+                    <input type="text" name="password" maxlength="16" onKeyUp="value=value.replace(/[\W]/g,'')" lay-verify="required|pass" placeholder="请输入密码" autocomplete="off" class="layui-input" id="LAY_password">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>确认密码</label>
+                <div class="layui-input-block">
+                    <input type="text" name="repassword" maxlength="16" onKeyUp="value=value.replace(/[\W]/g,'')" lay-verify="required|repass" placeholder="请输入确认密码" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item" id="member-add-role">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>角色</label>
+                <div class="layui-input-block">
+                    <select name="group_id" id="member-add-select-form" xm-select-max="2" lay-verify="required" xm-select-search="" xm-select="member-add-select-form" lay-verify="member-add-select-form">
+                        <option value="">请选择角色</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="second-step" style="display: none">
+            <div>资源分配</div>
+            <div class="layui-form-item">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>AI数</label>
+                <div class="layui-input-block">
+                    <input type="number" name="mn_ai" min="0" max="10000" lay-verify="required|isNumber" title="AI数" placeholder="请输入AI数" autocomplete="off" class="layui-input" oninput="isNumbers(this)">
+                    <script type="text/html" template lay-url="{{ layui.api.getResidueAi }}">
+                        <span style="position: absolute;right: 15px;top: 8px;font-size: 14px;color: #818997">可用AI数<span style="color: #3690FF">{{d.data.residueAi?d.data.residueAi:'0'}}</span>个</span>
+                    </script>
+                </div>
+            </div>
+            <div class="layui-form-item isUserType">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>最大外呼数</label>
+                <div class="layui-input-block">
+                    <input type="number" name="mn_obline" min="0" max="100000000" lay-verify="required|isNumber" title="最大外呼数" autocomplete="off" placeholder="请输入最大外呼数" oninput="isNumbers(this)" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item isUserType">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>最大私有数</label>
+                <div class="layui-input-block">
+                    <input type="number" name="max_private_flows" min="0" max="10000" lay-verify="required|isNumber" title="最大私有数" autocomplete="off" placeholder="请输入最大私有数" oninput="isNumbers(this)" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">选择号码</label>
+                <div class="layui-input-block">
+                    <!-- xm-select-direction="upward" -->
+                    <select name="phone" id="member-assignphone-select-1" xm-select="member-assignphone-select-1"
+                            lay-verify="member-assignphone-select-1" xm-select-search="">
+                        <option value="">请选择号码</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item" id="autocreateoperator">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>自建坐席</label>
+                <div class="layui-input-block">
+                    <input type="checkbox" name="autocreateoperator" lay-filter="switch-autocreateoperator" lay-skin="switch" value="1" lay-text="启用|关闭" checked>
+                </div>
+            </div>
+            <div class="layui-form-item layui-hide" id="bindoptid">
+                <label class="layui-form-label">绑定坐席</label>
+                <div class="layui-input-block">
+                    <select name="bindoptid" >
+                        <option value="">请选择坐席</option>
+                    </select>
+                </div>
+            </div>
+            <!-- <div class="layui-form-item">
+                <label class="layui-form-label"><i class="layui-icon layui-icon-rate-solid"></i>人机耦合</label>
+                <div class="layui-input-block">
+                    <input type="checkbox" name="hmstate" lay-filter="switch-coupling" lay-skin="switch" value="1" lay-text="启用|关闭" checked>
+                </div>
+            </div> -->
+            <div>流程分配</div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">选择流程</label>
+                <div class="layui-input-block">
+                    <select name="callflow" id="member-assignrpone-select-1" xm-select="member-assignrpone-select-1" lay-verify="member-assignrpone-select-1" xm-select-search="">
+                        <option value="">请选择流程</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item layui-hide" style="text-align: center;">
+            <button class="layui-btn layui-btn-sm" lay-submit lay-filter="member-add-submit" id="member-add-submit">
+                确定
+            </button>
+            <button class="layui-btn layui-btn-sm close">
+                取消
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use('set', layui.factory('set'));
+    layui.use(['index', 'form', 'laydate', 'formSelects', 'moment'], function () {
+        var $ = layui.$,
+            form = layui.form,
+            laydate = layui.laydate,
+            admin = layui.admin,
+            layer = layui.layer,
+            api = layui.api,
+            moment = layui.moment,
+            formSelects = layui.formSelects,
+            usertype = layui.data(layui.setter.tableName)['userData']['usertype'],
+            userid = layui.data(layui.setter.tableName)['userData']['useradminid'];
+        ininData();
+
+        //监听提交
+        form.on('submit(member-add-submit)', function (data) {
+            var field = data.field; //获取提交的字段
+            // if (!field['hmstate']) {
+            //     field['hmstate'] = 0;
+            // }
+            if (!field['autocreateoperator']) {
+                field['autocreateoperator'] = 0;
+            }
+            //提交 Ajax 成功后，关闭当前弹层并重载表格
+            var loading = layer.msg('提交中，请稍后', {
+                icon: 16,
+                shade: 0.1,
+                time: 0
+            });
+            admin.req({
+                url: api.addMember,
+                data: field,
+                type: 'post',
+                done: function (res) {
+                    layer.close(loading);
+                    layer.msg(res.msg, {
+                        icon: 1,
+                        time: 2000
+                    }, function () {
+                        layui.treeGrid.reload('member-consumer-table-1');
+                        layui.admin.INDEXS ? layui.layer.close(layui.admin.INDEXS) : layui.layer.closeAll('page');
+                        layui.admin.INDEXS = null;
+                    });
+                }
+            });
+
+        });
+
+        // 自建坐席开关
+        form.on('switch(switch-autocreateoperator)', function (data) {
+            if (data.elem.checked) {
+                $("#bindoptid").addClass('layui-hide');
+                return false;
+            }
+            $("#bindoptid").removeClass('layui-hide');
+        });
+
+        // 分配流程数据
+        function assignrponeSelect() {
+            formSelects.data('member-assignrpone-select-1', 'server', {
+                url: api.callflow + '?model=PhoneNoList&field=id as value,flowname as name&where=&upuserid'+userid+'&access_token=' + layui.data(layui.setter.tableName).access_token,
+                beforeSuccess: function (id, url, searchVal, result) {
+                    //我要把数据外层的code, msg, data去掉
+                    result = result.data;
+                    return result;
+                },
+                success: function (id, url, searchVal, result) {
+                }
+            });
+        }
+
+        // 分配号码数据
+        function assignrponeSelect2() {
+            formSelects.data('member-assignphone-select-1', 'server', {
+                url: api.returnPhoneData + '?model=PhoneNoList&field=id as value,name,phoneno&where=&upuserid'+userid+'&access_token=' + layui.data(layui.setter.tableName).access_token,
+                beforeSuccess: function (id, url, searchVal, result) {
+                    //我要把数据外层的code, msg, data去掉
+                    result = result.data;
+                    return result;
+                },
+                success: function (id, url, searchVal, result) {
+                }
+            });
+        }
+
+        // 获取角色组
+        function getUserGroup1() {
+            formSelects.data('member-add-select-form', 'server', {
+                url: api.getUserGroup + "?model=Operator&field=id as value,name&where=&access_token=" + layui.data(layui.setter.tableName).access_token,
+                beforeSuccess: function (id, url, searchVal, result) {
+                    //我要把数据外层的code, msg, data去掉
+                    var reg = new RegExp( 'title' , "g" )
+                    var reg1 = new RegExp( 'id' , "g" )
+                    if(result.data.auth_groups&&result.data.auth_groups.length>0){
+                        result = JSON.parse(JSON.stringify(result.data.auth_groups).replace(reg,'name').replace(reg1,'value'));
+                    }else {
+                        result = JSON.parse(JSON.stringify(result.data.auth_groups));
+                    }
+                    //然后返回数据
+                    return result;
+                },
+                success: function (id, url, searchVal, result) {
+                }
+            });
+        }
+
+        // 绑定坐席
+        function getOperatorList(id) {
+            id = id ? id : userid;
+            $(".name-bindoptid").remove();
+            admin.req({
+                url: api.getOperatorList,
+                data: {'useradminid': id},
+                type: 'post',
+                done: function (res) {
+                    var html = '';
+                    var data = res.data;
+                    $.each(data, function (it, item) {
+                        if (item.bindOtherUser == 0) {
+                            html += '<option class="name-bindoptid" value="' + item.id + '">' + item.name + '</option>';
+                        } else {
+                            html += '<option class="name-bindoptid" disabled value="' + item.id + '">' + item.name + '</option>';
+                        }
+                    });
+                    $("select[name=bindoptid]").append(html);
+                    form.render('select');
+                }
+            });
+        }
+        var active = {
+            next: function() {
+                if(!$('input[name="username"]').val()){
+                    layer.msg('必填项不能为空', {
+                        icon: 2,
+                        time: 2000
+                    });
+                    return false
+                }
+                if(!$('input[name="loginname"]').val()){
+                    layer.msg('必填项不能为空', {
+                        icon: 2,
+                        time: 2000
+                    });
+                    return false
+                }
+                if(!$('input[name="password"]').val()){
+                    layer.msg('必填项不能为空', {
+                        icon: 2,
+                        time: 2000
+                    });
+                    return false
+                }
+                if(!$('input[name="repassword"]').val()){
+                    layer.msg('必填项不能为空', {
+                        icon: 2,
+                        time: 2000
+                    });
+                    return false
+                }
+                if($('input[name="password"]').val()!=$('input[name="repassword"]').val()){
+                    layer.msg('两次密码输入不一致', {
+                        icon: 2,
+                        time: 2000
+                    });
+                    return false
+                }
+                var selectValue=formSelects.value('member-add-select-form');
+                if(selectValue && selectValue.length == 0){
+                    layer.msg('必填项不能为空', {
+                        icon: 2,
+                        time: 2000
+                    });
+                    return false
+                }
+                $('.layui-layer-btn-r .layui-layer-btn0').show()
+                $('.layui-layer-btn-r .layui-layer-btn1').show()
+                $('.first-step').hide();
+                $('.second-step').show();
+                $('.previous-step').show();
+                $('.next-step').hide();
+            },
+            previous: function() {
+                $('.layui-layer-btn-r .layui-layer-btn0').hide()
+                $('.layui-layer-btn-r .layui-layer-btn1').hide()
+                $('.first-step').show();
+                $('.second-step').hide();
+                $('.previous-step').hide();
+                $('.next-step').show();
+            }
+        };
+        $('.layui-layer-btn-r .step').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+       function ininData(){
+           $('.layui-layer-btn-r').append('<button class="step next-step" style="position: absolute;right: 24px;background: white;color: #3690FF;padding-top: 10px;border: none" data-type="next">下一步</button>')
+           $('.layui-layer-btn-r').append('<button class="step previous-step" style="display:none;position: absolute;left: 24px;background: white;color: #3690FF;padding-top: 10px;border: none" data-type="previous">上一步</button>')
+           $('.layui-layer-btn-r .layui-layer-btn0').hide()
+           $('.layui-layer-btn-r .layui-layer-btn1').hide()
+            assignrponeSelect();
+            assignrponeSelect2();
+            getUserGroup1();
+           getOperatorList()
+        }
+    });
+</script>
