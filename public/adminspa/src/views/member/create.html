@@ -1,0 +1,104 @@
+<title>新增员工</title>
+<div class="layui-form" lay-filter="member-add-form-add" id="member-add-form-add" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item" id="member-add-div-agent">
+        <label class="layui-form-label">所属部门</label>
+        <div class="layui-input-block">
+            <select name="department_id" lay-filter="member-add-select-agent">
+                <option value="">请选择上级部门</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="username" lay-verify="username" maxlength="16" placeholder="用户名必须是4到16位字母" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-block">
+            <input type="text" name="password" lay-verify="pass" maxlength="16" placeholder="密码必须6到16位字母数字下划线" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">员工姓名</label>
+        <div class="layui-input-block">
+            <input type="text" name="nickname" lay-verify="required" maxlength="10" placeholder="请输入员工姓名" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="member-add-submit-add" id="member-add-submit-add" value="确认添加">
+        <input type="button" lay-submit lay-filter="member-add-edit-add" id="member-add-edit-add" value="确认编辑">
+    </div>
+</div>
+
+<script>
+    layui.use('department', layui.factory('department')).use(['index', 'form'], function () {
+        var $ = layui.$,
+            form = layui.form,
+            admin = layui.admin,
+            api = layui.api,
+            layer = layui.layer,
+            kdepartment = layui.department;
+        //监听提交
+
+        form.verify({
+          username: function(value, item){ //value：表单的值、item：表单的DOM对象
+            console.log(value)
+            if(!/^[a-zA-Z]{4,16}$/.test(value)){
+              return '用户名必须是4到16位字母';
+            }
+          }
+          
+          //我们既支持上述函数式的方式，也支持下述数组的形式
+          //数组的两个值分别代表：[正则匹配、匹配不符时的提示文字]
+          ,pass: [
+            /^[a-zA-Z0-9_]{6,16}$/
+            ,'密码必须6到16位字母数字下划线'
+          ] 
+        });      
+
+        form.on('submit(member-add-submit-add)', function (data) {
+            var field = data.field; //获取提交的字段
+            //提交 Ajax 成功后，关闭当前弹层并重载表格
+            admin.req({
+                url: 'user/store',
+                data: field,
+                type: 'post',
+                done: function done(res) {
+                  let data = res.data;
+                  kdepartment.clickNode(data.department_id);
+                  layer.msg(res.msg, {
+                      icon: 1,
+                      time: 1000
+                  }, function () {
+                      layui.admin.INDEXS ? layui.layer.close(layui.admin.INDEXS) : layui.layer.closeAll('page');
+                      layui.admin.INDEXS = null;
+                  });
+                }
+            });
+        });
+        let departmentUrl = 'department/list';
+        getDepartmentList(departmentUrl);
+        function getDepartmentList(url) {
+          $(".member-add-option-agent").remove();
+          admin.req({
+              url: url,
+              type: 'get',
+              done: function (res) {
+                  var html = '';
+                  $.each(res.data, function (it, item) {
+                      html += '<option class="member-add-option-agent" value="' + item.id + '">' + item.name + '</option>';
+                  });
+                  $('select[name=department_id]').find('option').after(html);
+                  form.render('select');
+              }
+          });
+        }
+
+    });
+
+</script>

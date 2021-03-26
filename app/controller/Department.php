@@ -13,7 +13,7 @@ class Department extends Base
         $this->validate($validate->createRules, $this->requestParam);
         $result = $model->initData($this->userData)->create($this->requestParam);
 
-        return $this->success($result);
+        return $this->success($result, '新增成功');
     }
 
     public function info(Depart $model)
@@ -34,13 +34,13 @@ class Department extends Base
     {
         $list = $model->initData($this->userData)->editor($this->requestParam);
 
-        return $this->success($list);
+        return $this->success($list, '编辑成功');
     }
 
     public function delete(Depart $model)
     {
         $list = $model->initData($this->userData)->delete($this->requestParam['id']);
 
-        return $this->success($list);
+        return $this->success($list, '删除成功');
     }
 }

@@ -37,7 +37,7 @@ class Jwt
      * jwt解码
      *
      * @param string $jwt
-     * @return void
+     * @return array|string
      */
     public static function decode($jwt = '')
     {

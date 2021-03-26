@@ -79,6 +79,9 @@ class Voting extends Model
 
     public function rankingList(array $query = [])
     {
+        if (!empty($query['year_quarter'])) {
+            [$query['year'], $query['quarter']] = explode('-', $query['year_quarter']);
+        }
         $companyId = $this->userData['company_id'];
         $year = $query['year'] ?? date("Y");
         $quarter = $query['quarter'] ?? Quarter::getNowQuarter()['quarter'];
@@ -86,7 +89,7 @@ class Voting extends Model
         SELECT
     u.id,
 	u.nickname,
-	sum( v.voting_score ) as score,
+	sum( v.voting_score ) as voting_score,
 	v.year,
 	v.quarter 
 FROM
@@ -99,7 +102,7 @@ WHERE
 GROUP BY
 	v.manager_id
 ORDER BY 
-    score desc
+    voting_score desc
 sql;        
         $list = $this->query($sql);
         $listColumn = array_column($list, null, 'id');
@@ -111,7 +114,7 @@ sql;
                 $push = [
                     'id' => $value['id'],
                     'nickname' => $value['nickname'],
-                    'score' => 0,
+                    'voting_score' => 0,
                     'year' => $year,
                     'quarter' => $quarter
                 ];
@@ -123,20 +126,38 @@ sql;
 
     public function rankingListDetails(array $query = [])
     {
-        $this->alias('v')->leftJoin('user as u', 'u.id', 'v.user_id');
+        $quarter = Quarter::getQuarter();
+        if (!isset($quarter[$query['year'] . $query['quarter']])) {
+            throw new InvalidRequestException("季度不存在");
+        }
+        $manList  = (new Department())->where('manager_id', '=', $query['manager_id'])->find();
+        if (empty($manList)) {
+            throw new InvalidRequestException("不是经理");
+        }
+        $this->alias('v')->leftJoin('users as u', 'u.id', 'v.user_id');
         $this->queryWhereField = [
-            ['u.nickname', 'like', '%%VALUE%%'],
+            ['u.id', '=', '%VALUE%'],
             ['v.manager_id', '=', '%VALUE%'],
-            ['v.company_id', '=', '%VALUE%']
+            ['v.company_id', '=', '%VALUE%'],
+            ['v.year', '=', '%VALUE%'],
+            ['v.quarter', '=', '%VALUE%']
         ];
     
-        $this->queryShowField = ['u.nickname', 'v.voting_score', 'v.created_at'];
-    
+        $this->queryShowField = ['u.nickname', 'v.voting_score', 'v.created_at', 'v.year', 'v.quarter'];
+        
         $this->queryOrderField = [
-            ['v.id', 'desc']
+            ['v.voting_score', 'desc']
         ];
-        $query['company_id'] = $this->userData['company_id'];
-        $list = $this->list($query);
+        $list = [
+            'company_id' => $this->userData['company_id'],
+            'manager_id' => $query['manager_id'],
+            'year' => $query['year'],
+            'quarter' => $query['quarter'],
+        ];
+
+        $list = array_merge($query, $list);
+
+        $list = $this->list($list);
 
         return $list;
     }
@@ -173,19 +194,19 @@ sql;
                 $value['qsum'] = 0;
             }
         }
-
+        $quarter = array_reverse($quarter);
         return $quarter;
     }
 
     public function votingListDetails(array $query)
     {
-        $this->alias('v')->leftJoin('user as u', 'u.id', 'v.manager_id');
+        $this->alias('v')->leftJoin('users as u', 'u.id', 'v.manager_id');
         $this->queryWhereField = [
             ['v.user_id', '=', '%VALUE%'],
             ['v.year', '=', '%VALUE%'],
             ['v.quarter', '=', '%VALUE%'],
         ];
-        $this->queryShowField = ['u.nickname', 'v.voting_score', 'v.created_at'];
+        $this->queryShowField = ['u.nickname', 'v.voting_score', 'v.created_at', 'v.year', 'v.quarter', 'v.manager_id'];
         $this->queryOrderField = [
             ['v.voting_score', 'desc'] 
         ];
@@ -197,5 +218,13 @@ sql;
         $list = $this->list($query);
 
         return $list;
+    }
+
+    public function manager()
+    {
+        // 获取所有部门经理
+        $user = (new User())->getAllManager();
+
+        return $user;
     }
 }

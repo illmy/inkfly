@@ -46,7 +46,7 @@ html{background-color: #f2f2f2; color: #666;}
 .layui-layout-admin .layui-side{width: 220px; top: 0; z-index: 1001;}
 .layui-layout-admin .layui-logo,
 .layui-layout-admin .layui-header .layui-nav .layui-nav-item{height: 50px; line-height: 50px;}
-.layui-layout-admin .layui-logo{position: fixed; left: 0; top: 0; z-index: 1002; width: 220px; height: 49px; padding: 0 15px; box-sizing: border-box; overflow: hidden; font-weight: 300; background-repeat: no-repeat; background-position: center center;}
+.layui-layout-admin .layui-logo{position: fixed; left: 0; top: 0; z-index: 1002; width: 220px; height: 49px; /*padding: 0 15px;*/ box-sizing: border-box; overflow: hidden; font-weight: 300; background-repeat: no-repeat; background-position: center center;}
 .layui-layout-admin .layui-layout-left,
 .layadmin-pagetabs,
 .layui-layout-admin .layui-body,

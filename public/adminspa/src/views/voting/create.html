@@ -1,0 +1,66 @@
+<title>投票</title>
+<div class="layui-form" lay-filter="voting-add-form-add" id="voting-add-form-add" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">单选框</label>
+        <div class="layui-input-block">
+          <input type="radio" name="voting_score" value="1" title="1分">
+          <input type="radio" name="voting_score" value="2" title="2分">
+          <input type="radio" name="voting_score" value="3" title="3分">
+          <input type="radio" name="voting_score" value="4" title="4分">
+          <input type="radio" name="voting_score" value="5" title="5分" checked>
+        </div>
+      </div>
+      <input type="hidden" name="year">
+      <input type="hidden" name="quarter">
+      <input type="hidden" name="manager_id">
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="voting-add-submit-add" id="voting-add-submit-add" value="确认添加">
+        <input type="button" lay-submit lay-filter="voting-add-edit-add" id="voting-add-edit-add" value="确认编辑">
+    </div>
+</div>
+<script type="text/html" template>
+  {{# 
+    getVotings(d.params);
+  }}
+</script>
+<script>
+function getVotings(d) {
+  layui.use(['index', 'form'], function () {
+    var $ = layui.$,
+        form = layui.form,
+        admin = layui.admin,
+        api = layui.api,
+        layer = layui.layer;
+    
+    //表单初始化
+    form.val("voting-add-form-add", {
+      "year": d.year,
+      "quarter": d.quarter,
+      "manager_id": d.manager_id
+    });
+    //监听提交
+    form.on('submit(voting-add-submit-add)', function (data) {
+        var field = data.field; //获取提交的字段
+        //提交 Ajax 成功后，关闭当前弹层并重载表格
+        admin.req({
+            url: 'voting/store',
+            data: field,
+            type: 'post',
+            done: function done(res) {
+              let data = res.data;
+              layer.msg(res.msg, {
+                  icon: 1,
+                  time: 1000
+              }, function () {
+                  layui.admin.INDEXS ? layui.layer.close(layui.admin.INDEXS) : layui.layer.closeAll('page');
+                  layui.admin.INDEXS = null;
+              });
+            }
+        });
+    });
+
+  });
+}
+    
+
+</script>

@@ -61,9 +61,16 @@
     <div class="layui-side-scroll">
       <script type="text/html" template lay-url="init/menus?v={{ layui.admin.v }}" 
       lay-done="layui.element.render('nav', 'layadmin-system-side-menu');" id="TPL_layout">
-      
+        {{#
+          var filename = layui.data(layui.setter.tableName)['userData']['logo'];
+        }}
         <div class="layui-logo" lay-href="">
+          {{# if (filename != '') { }}
+          <img width="220px" height="49px" src="/file/read?filename={{ filename }}&X-Token={{layui.data(layui.setter.tableName)[layui.setter.request.tokenName]}}"
+                alt="logo" class="img_style">
+          {{# } else { }}
           <span>{{ layui.setter.name || 'layuiAdmin' }}</span>
+          {{# } }}
         </div>
         
         <ul class="layui-nav layui-nav-tree" lay-shrink="all" id="LAY-system-side-menu" lay-filter="layadmin-system-side-menu">

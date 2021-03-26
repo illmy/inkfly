@@ -34,14 +34,18 @@ class Model extends ModelBase
         $this->beforeList($query);
         $this->field($this->queryShowField);
         foreach ($this->queryWhereField as $whereField) {
-            
+
             [$field, $op, $val] = $whereField;
-            if (strpos('.', $field)) {
+            if (strpos($field, '.')) {
                 $fld = explode('.', $field)[1];
             } else {
                 $fld = $field;
             }
-            if (!empty($query[$fld]) || $query[$fld] == '0') {
+
+            if (
+                !empty($query[$fld])
+                || (isset($query[$fld]) && $query[$fld] == '0')
+            ) {
                 $this->where($field, $op, str_replace('%VALUE%', $query[$fld], $val));
             }
         }
@@ -52,8 +56,15 @@ class Model extends ModelBase
 
         foreach ($this->queryOrderField as $orderField) {
             [$field, $su] = $orderField;
-            if ($query['order_field'] == $field) {
-                $this->orderBy($su . $field, $query['order_way'] ?? 'asc');
+            if (strpos($field, '.')) {
+                $fld = explode('.', $field)[1];
+            } else {
+                $fld = $field;
+            }
+            if (isset($query['order_field']) && $query['order_field'] == $fld) {
+                $this->orderBy($field, $query['order_way'] ?? 'asc');
+            } else {
+                $this->orderBy($field, $su);
             }
         }
 
@@ -64,13 +75,11 @@ class Model extends ModelBase
             $this->limit($start, $pageSize);
         }
         $result = $this->select();
-
         return $result;
     }
 
     protected function beforeList($query = [])
     {
-
     }
 
     /**

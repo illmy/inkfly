@@ -33,7 +33,7 @@ class Jwt
         if (is_array($decoded)) {
             return $next($request);
         } else {
-            throw new InvalidRequestException('未授权访问', 1002);
+            throw new InvalidRequestException($decoded, 1001);
         }
     }
 

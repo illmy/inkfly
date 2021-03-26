@@ -4,6 +4,7 @@ namespace app\controller;
 
 use app\model\Voting as VoteModel;
 use app\validate\Voting as VoteValidate;
+use app\tools\Quarter;
 
 class Voting extends Base
 {
@@ -13,7 +14,7 @@ class Voting extends Base
         $this->validate($validate->votingRules, $this->requestParam);
         $result = $model->initData($this->userData)->create($this->requestParam);
 
-        return $this->success($result);
+        return $this->success($result, '投票成功');
     }
 
     public function ranking(VoteModel $model)
@@ -42,5 +43,19 @@ class Voting extends Base
         $result = $model->initData($this->userData)->votingListDetails($this->requestParam);
 
         return $this->success($result);
+    }
+
+    public function manager(VoteModel $model)
+    {
+        $result = $model->initData($this->userData)->manager($this->requestParam);
+
+        return $this->success($result);
+    }
+
+    public function quarter(VoteModel $model)
+    {
+        $quarter = Quarter::getQuarter();
+        $quarter = array_reverse($quarter);
+        return $this->success($quarter);
     }
 }

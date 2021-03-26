@@ -1,0 +1,98 @@
+<title>编辑员工</title>
+<div class="layui-form" lay-filter="member-update-form-update" id="member-update-form-update" style="padding: 20px 30px 0 0;">
+    <div class="layui-form-item" id="member-add-div-agent">
+        <label class="layui-form-label">所属部门</label>
+        <div class="layui-input-block">
+          <input type="hidden" name="id">
+            <select name="department_id" lay-filter="member-add-select-agent">
+                <option value="">请选择上级部门</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="username" lay-verify="username" maxlength="16" placeholder="用户名必须是4到16位字母" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">员工姓名</label>
+        <div class="layui-input-block">
+            <input type="text" name="nickname" lay-verify="required" maxlength="10" placeholder="请输入员工姓名" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="member-update-submit-update" id="member-update-submit-update" value="确认添加">
+        <input type="button" lay-submit lay-filter="member-add-edit-add" id="member-add-edit-add" value="确认编辑">
+    </div>
+</div>
+    <script type="text/html" template lay-url="user/info?id={{ d.params.id }}"
+            lay-done="departmentUpdate(d.data)"></script>
+</form>
+<script>
+    function departmentUpdate(d) {
+        layui.use('department', layui.factory('department')).use(['index', 'form'], function () {
+            var $ = layui.$,
+                form = layui.form,
+                api = layui.api,
+                admin = layui.admin,
+                layer = layui.layer,
+                kdepartment = layui.department;
+            //表单初始化
+            form.val("member-update-form-update", {
+                "id": d.id,
+                "department_id": d.department_id,
+                "username": d.username,
+                "nickname": d.nickname
+            });
+
+            //监听提交
+            form.on('submit(member-update-submit-update)', function (data) {
+                var field = data.field; //获取提交的字段
+                //提交 Ajax 成功后，关闭当前弹层并重载表格
+                admin.req({
+                    url: 'user/update',
+                    data: field,
+                    type: 'post',
+                    done: function (res) {
+                      let data = res.data;
+                      kdepartment.clickNode(data.department_id);
+                        layer.msg(res.msg, {
+                            icon: 1,
+                            time: 1000
+                        }, function () {
+                            layui.admin.INDEXS ? layui.layer.close(layui.admin.INDEXS) : layui.layer.closeAll('page');
+                            layui.admin.INDEXS = null;
+                        });
+                    }
+                });
+            });
+
+            let departmentUrl = 'department/list';
+            getDepartmentList(departmentUrl);
+            function getDepartmentList(url) {
+                $(".member-add-option-agent").remove();
+                admin.req({
+                    url: url,
+                    type: 'get',
+                    done: function (res) {
+                        var html = '';
+                        $.each(res.data, function (it, item) {
+                            if (item.id == d.department_id) {
+                                html += '<option class="member-add-option-agent" selected value="' + item.id + '">' + item.name + '</option>';
+                            } else {
+                                html += '<option class="member-add-option-agent" value="' + item.id + '">' + item.name + '</option>';
+                            }
+                        });
+                        $('select[name=department_id]').find('option').after(html);
+                        form.render('select');
+                    }
+                });
+            }
+        });
+
+    };
+
+</script>

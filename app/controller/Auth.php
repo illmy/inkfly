@@ -7,10 +7,11 @@ use app\validate\User as UserValidate;
 use app\tools\Jwt;
 use app\model\Menu;
 use app\exceptions\InvalidRequestException;
+use app\model\Company;
 
 class Auth extends Base
 {
-    public function Login(User $user, UserValidate $validate, Menu $mObj)
+    public function Login(User $user, UserValidate $validate, Menu $mObj, Company $company)
     {
         // 参数验证
         $this->validate($validate->loginRules, $this->requestParam);
@@ -24,6 +25,10 @@ class Auth extends Base
         if (empty($menus)) {
             throw new InvalidRequestException('未授权访问', 1002);
         }
+
+        $cmp = $company->initData($result)->info();
+
+        $result['logo'] = $cmp['logo'];
 
         $res = [
             'token' => $accessToken,

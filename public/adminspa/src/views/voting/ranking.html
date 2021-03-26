@@ -1,0 +1,131 @@
+<title>排行列表</title>
+<div class="layui-fluid">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md12">
+      <div class="layui-card">
+        <div class="layui-card-header layuiadmin-card-header-auto button_add_pd">
+            <div class="layui-form-item">
+              <div>
+                <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-userfront-formlist">
+                  <div class="layui-form-item">
+                    <div class="layui-inline">
+                      <label class="layui-form-label">季度</label>
+                      <div class="layui-input-block">
+                        <select name="year_quarter">
+                          <option value="">季度</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="layui-inline">
+                      <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="LAY-user-front-search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+        <div class="layui-card-body table_pd">
+          <table class="layui-hide" id="alarm-index-table-1-ranking" lay-filter="alarm-index-table-1-ranking"></table>
+          
+          <script type="text/html" id="alarm-index-table-1-rankings">
+            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="detail">详情</a>
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use(['index', 'table'], function(){
+  var table = layui.table
+  ,form = layui.form
+  ,api = layui.api
+  ,view = layui.view
+  ,admin = layui.admin
+  ,setter = layui.setter
+  ,$ = layui.$;
+
+  table.render({
+    elem: '#alarm-index-table-1-ranking'
+    ,url: 'voting/ranking'
+    ,method: 'post'
+    ,where: {
+      "X-Token": layui.data(setter.tableName)[setter.request.tokenName]
+    }
+    ,cellMinWidth: 80 
+    ,height: 'full-120'
+    ,limit:20
+    ,cols: [[
+      {field:'year',width:170, title: '年份'}
+      ,{field:'quarter',width:270, title: '季度',templet: function(d){           
+        return d.quarter + '季度';
+      }}
+      ,{field: 'nickname', width:300, title: '部门经理'}
+      ,{field: 'voting_score', title: '总投票分数'}
+      ,{width:180, title: '操作', align:'center', fixed: 'right', toolbar: '#alarm-index-table-1-rankings'}
+    ]]
+  });
+
+  //监听搜索
+  form.on('submit(LAY-user-front-search)', function(data){
+    var field = data.field;
+    
+    //执行重载
+    table.reload('alarm-index-table-1-ranking', {
+      where: field
+    });
+  });
+  
+  //监听工具条
+  table.on('tool(alarm-index-table-1-ranking)', function(obj){
+    var data = obj.data;
+    console.log(data);
+    if(obj.event === 'detail'){
+      admin.popup({
+          title: '投票详情',
+          area: ['900px', '550px'],
+          id: 'LAY-popup-user-edit-ranking',
+          btnAlign: 'c',
+          success: function (layero, index) {
+              layui.admin.INDEXS = index;
+              console.log(data);
+              view(this.id).render('voting/rdetail', {
+                  year: data.year,
+                  quarter: data.quarter,
+                  manager_id: data.id
+              }).done(function () {
+                  
+              });
+          },
+          yes: function (index, layero) {
+              
+          },
+          cancel: function(index, layero){ 
+            layer.close(index);
+          } 
+      });
+    }
+  }); 
+
+  let userUrl = 'voting/quarter';
+    getQuarter(userUrl);
+    function getQuarter(url) {
+      $(".member-add-option-manager").remove();
+      admin.req({
+          url: url,
+          type: 'get',
+          done: function (res) {
+              var html = '';
+              $.each(res.data, function (it, item) {
+                html += '<option class="member-add-option-manager" value="' + item.year + '-' + item.quarter + '">' +  item.year + '年' + item.quarter + '季度</option>';
+              });
+              $('select[name=year_quarter]').find('option').after(html);
+              form.render('select');
+          }
+      });
+    }
+});
+</script>

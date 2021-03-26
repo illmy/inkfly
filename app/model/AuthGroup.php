@@ -36,4 +36,14 @@ class AuthGroup extends Model
         $groups[$uid] = $list;
         return $groups[$uid];
     }
+
+    public function bindUserGroup($userId, $groupId = 2)
+    {
+        $data = [
+            'user_id' => $userId,
+            'group_id' => $groupId
+        ];
+        $result = $this->table('auth_group_access')->insert($data);
+        return $result;
+    }
 }

@@ -42,7 +42,7 @@
                     <!-- <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="LAY-user-back-search">
                       <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
                     </button> -->
-					          <button class="layui-btn layuiadmin-btn-admin" data-type="add">添加部门</button>
+					          <button class="layui-btn layuiadmin-btn-admin" data-type="addDepart">添加部门</button>
                     <button class="layui-btn layuiadmin-btn-admin" data-type="add">添加员工</button>
                   </div>
                 </div>
@@ -123,22 +123,42 @@
           });
         }); 
       }
+      ,addDepart: function(){
+        admin.popup({
+          title: '新增部门',
+          area: ['675px', '550px'],
+          id: 'LAY-popup-department-add',
+          btn: ['确定', '取消'],
+          btnAlign: 'r',
+          success: function success(layero, index) {
+              layui.admin.INDEXS = index;
+              view(this.id).render('department/create').done(function () {
+                  form.render(null, 'department-add-form-add');
+              });
+          },
+          yes: function yes(index, layero) {
+              //点击确认触发 iframe 内容中的按钮提交
+              var submit = $("#department-add-submit-add");
+              submit.click();
+          }
+        });
+      }
       ,add: function(){
         admin.popup({
-          title: '新增',
+          title: '新增员工',
           area: ['675px', '550px'],
           id: 'LAY-popup-user-add',
           btn: ['确定', '取消'],
           btnAlign: 'r',
           success: function success(layero, index) {
               layui.admin.INDEXS = index;
-              view(this.id).render('operator/add').done(function () {
-                  form.render(null, 'operator-add-form-add');
+              view(this.id).render('member/create').done(function () {
+                  form.render(null, 'member-add-form-add');
               });
           },
           yes: function yes(index, layero) {
               //点击确认触发 iframe 内容中的按钮提交
-              var submit = $("#operator-add-submit-add");
+              var submit = $("#member-add-submit-add");
               submit.click();
           }
         });
@@ -152,7 +172,7 @@
   });
   </script>
   <style>
-    #treeDemo_1_remove{display: none;}
+    #treeDemo_1_edit,#treeDemo_1_remove{display: none;}
   </style>
   
   

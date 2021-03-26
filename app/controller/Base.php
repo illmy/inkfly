@@ -65,10 +65,18 @@ class Base extends Controller
             }
         };
 
+        $regex = function($name, $rule, $value) {
+            if (!preg_match($rule, $value)) {
+                return $name . '参数不规范';
+            } else {
+                return true;
+            }
+        };
+
         foreach ($rules as $key => $val) {
             $childRule = explode('|', $val);
             foreach ($childRule as $child) {
-                if (!isset($data[$key]) && !in_array('require', $childRule)) {
+                if ((!isset($data[$key]) || strlen($data[$key] == 0)) && !in_array('require', $childRule)) {
                     continue;
                 }
                 if (strpos($child, ':')) {

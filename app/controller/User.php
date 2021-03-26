@@ -11,10 +11,10 @@ class User extends Base
     public function store(UserModel $model, UserValidate $validate)
     {
         // 参数验证
-        $this->validate($validate->loginRules, $this->requestParam);
+        $this->validate($validate->createRules, $this->requestParam);
         $result = $model->initData($this->userData)->create($this->requestParam);
 
-        return $this->success($result);
+        return $this->success($result, '新增成功');
     }
 
     public function info(UserModel $model)
@@ -35,13 +35,13 @@ class User extends Base
     {
         $list = $model->initData($this->userData)->editor($this->requestParam);
 
-        return $this->success($list);
+        return $this->success($list, '编辑成功');
     }
 
     public function delete(UserModel $model)
     {
         $list = $model->initData($this->userData)->delete($this->requestParam['id']);
 
-        return $this->success($list);
+        return $this->success($list, '删除成功');
     }
 }

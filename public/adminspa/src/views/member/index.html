@@ -43,7 +43,16 @@
           <i class="layui-icon layui-icon-tips" lay-tips="要支持的噢" lay-offset="5"></i>
         </div>
         <div class="layui-card-body layui-text layadmin-text">
-          <p>Infogo</p>
+          <div class="layui-card">
+            <div class="layui-card-body">
+              <button type="button" class="layui-btn layui-btn-danger" id="test-upload-size">
+                <i class="layui-icon"></i>上传图片
+              </button>
+              <div class="layui-inline layui-word-aux">
+                这里以限制 2M 为例
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -68,6 +77,24 @@
   这里我们采用的是方式1。其它很多视图中采用的其实都是方式2，因为更简单些，也减少了一个请求数。
   
 */
-layui.use('console', layui.factory('console'));
+layui.use('console', layui.factory('console')).use(['admin', 'upload'], function(){
+  var $ = layui.jquery
+    ,upload = layui.upload
+    ,setter = layui.setter
+    ,layer = layui.layer;
+  //设定文件大小限制
+  upload.render({
+    elem: '#test-upload-size'
+    ,url: 'upload/move'
+    ,size: 2048 //限制文件大小，单位 KB
+    ,headers: {'X-Token': layui.data(setter.tableName)[setter.request.tokenName]}
+    ,done: function(res){
+      layer.msg(res.msg, {
+        icon: 1,
+        time: 1000
+      });
+    }
+  });
+});
 </script>
 

@@ -1,0 +1,120 @@
+<title>投票详情</title>
+<div class="layui-fluid">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md12">
+      <div class="layui-card">
+        <div class="layui-card-header layuiadmin-card-header-auto button_add_pd">
+          <div class="layui-form-item">
+            <div>
+              <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="layadmin-userfront-formlist">
+                <div class="layui-form-item">
+                  <div class="layui-inline">
+                    <label class="layui-form-label">员工</label>
+                    <div class="layui-input-block">
+                      <select name="id">
+                        <option value="">员工</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="LAY-user-front-search">
+                      <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="layui-card-body table_pd">
+          <table class="layui-hide" id="alarm-index-table-rdetail" lay-filter="alarm-index-table-rdetail"></table>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/html" template>
+  {{# 
+    getDetail(d.params);
+  }}
+</script>
+<script>
+function getDetail(d) {
+  layui.use(['index', 'table'], function(){
+  var table = layui.table
+  ,form = layui.form
+  ,api = layui.api
+  ,view = layui.view
+  ,admin = layui.admin
+  ,setter = layui.setter
+  ,$ = layui.$;
+  
+  form.render(null, 'layadmin-userfront-formlist');
+
+  //监听搜索
+  form.on('submit(LAY-user-front-search)', function(data){
+    var field = data.field;
+    
+    //执行重载
+    table.reload('alarm-index-table-rdetail', {
+      where: field
+    });
+  });
+  table.render({
+    elem: '#alarm-index-table-rdetail'
+    ,autoSort: false
+    ,url: 'voting/rdetails?year='+d.year+'&quarter='+d.quarter+'&manager_id='+d.manager_id
+    ,method: 'get'
+    ,where: {
+      "X-Token": layui.data(setter.tableName)[setter.request.tokenName]
+    }
+    ,cellMinWidth: 80 
+    ,height: 'full-180'
+    ,limit:20
+    ,cols: [[
+      {field:'year',width:120, title: '年份'}
+      ,{field:'quarter',width:170, title: '季度',templet: function(d){           
+        return d.quarter + '季度';
+      }}
+      ,{field: 'nickname', width:100, title: '员工'}
+      ,{field: 'voting_score', title: '投票分数', sort: true}
+      ,{field: 'created_at', title: '投票时间'}
+    ]]
+    ,page: true
+  });
+
+  table.on('sort(alarm-index-table-rdetail)', function(obj){ //注：sort 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+  
+    //尽管我们的 table 自带排序功能，但并没有请求服务端。
+    //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
+    table.reload('alarm-index-table-rdetail', {
+      initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。
+      ,where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+        order_field: obj.field //排序字段
+        ,order_way: obj.type //排序方式
+      }
+    });
+  });
+  
+  let userUrl = 'user/list';
+    getUserList(userUrl);
+    function getUserList(url) {
+      $(".member-add-option-manager").remove();
+      admin.req({
+          url: url,
+          type: 'get',
+          done: function (res) {
+              var html = '';
+              $.each(res.data, function (it, item) {
+                html += '<option class="member-add-option-manager" value="' + item.id + '">' + item.nickname + '</option>';
+              });
+              $('select[name=id]').find('option').after(html);
+              form.render('select');
+          }
+      });
+    }
+});
+}
+
+</script>

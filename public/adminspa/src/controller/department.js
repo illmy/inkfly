@@ -2,7 +2,6 @@
 
  @Name：组织架构管理
  @Author：illmy
- @Site：http://klt.hoocent.com:8088
  @License：LPPL
     
  */
@@ -23,7 +22,7 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
 				expandSpeed: ""
 			},
       async: {
-				enable: true,
+				enable: false,
 				url: getUrl,
         dataFilter: ajaxDataFilter
 			},
@@ -41,14 +40,7 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
       callback: {
         onClick: zTreeOnClick,
         beforeRemove: beforeRemove,
-        beforeRename: beforeRename,
         beforeEditName: zTreeBeforeEditName,
-        beforeDrag: beforeDrag, //拖拽前：捕获节点被拖拽之前的事件回调函数，并且根据返回值确定是否允许开启拖拽操作
-        beforeDrop: beforeDrop, //拖拽中：捕获节点操作结束之前的事件回调函数，并且根据返回值确定是否允许此拖拽操作
-        beforeDragOpen: beforeDragOpen, //拖拽到的目标节点是否展开：用于捕获拖拽节点移动到折叠状态的父节点后，即将自动展开该父节点之前的事件回调函数，并且根据返回值确定是否允许自动展开操作
-        onDrag: onDrag, //捕获节点被拖拽的事件回调函数
-        onDrop: onDrop, //捕获节点拖拽操作结束的事件回调函数
-        onExpand: onExpand //捕获节点被展开的事件回调函数
       }
     };
     
@@ -73,6 +65,7 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
         });
         console.log(zNodes);
         var obj = ztree.zTree.init($("#treeDemo"), setting, zNodes);
+        obj.expandAll(true);
         var node = obj.getNodeByParam("id", (zNodes[0]).id, null);
         setting.callback.onClick(null, obj.setting.treeId, node);
         // var url = returnUrl('1');
@@ -80,12 +73,13 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
       }
     });
     
+    
     //返回请求连接
     function returnUrl(treeNode) {
       if (treeNode == '1') {
         return departmentList;
       }
-      var level = treeNode.level;
+
       var param = "department_id="+treeNode.id;
       return host+userListUrl + '?' + param;
     }
@@ -104,197 +98,34 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
       return zNodes;
     };
 
-    function beforeExpand(treeId, treeNode) {
-			if (!treeNode.isAjaxing) {
-				startTime = new Date();
-				treeNode.times = 1;
-				ajaxGetNodes(treeNode, "refresh");
-				return true;
-			} else {
-				layer.msg("zTree 正在下载数据中，请稍后展开节点。。。");
-				return false;
-			}
-		}
-
-    function ajaxGetNodes(treeNode, reloadType) {
-			var zTree = $.fn.zTree.getZTreeObj("treeDemo");
-			if (reloadType == "refresh") {
-				treeNode.icon = "";
-				zTree.updateNode(treeNode);
-			}
-			zTree.reAsyncChildNodes(treeNode, reloadType, true);
-		}
-
     //点击事件
     function zTreeOnClick(event, treeId, treeNode) {
+      console.log(treeNode);
       $("#res-department-name").html('【'+treeNode.name+'】');
-      var level = treeNode.level;
-      var rid = treeNode.rid; 
       var up_departid = treeNode.id;
 
-      $("#department-form-rid").val(rid);
       $("#department-form-departid").val(up_departid);
       var url = returnUrl(treeNode);
       getDepartmentList(url);
-    }
-
-    //拖动排序
-    function dropPrev(treeId, nodes, targetNode) {
-      var pNode = targetNode.getParentNode();
-      if (pNode && pNode.dropInner === false) {
-        return false;
-      } else {
-        for (var i=0,l=curDragNodes.length; i<l; i++) {
-          var curPNode = curDragNodes[i].getParentNode();
-          if (curPNode && curPNode !== targetNode.getParentNode() && curPNode.childOuter === false) {
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-    function dropInner(treeId, nodes, targetNode) {
-      if (targetNode && targetNode.dropInner === false) {
-        return false;
-      } else {
-        for (var i=0,l=curDragNodes.length; i<l; i++) {
-          if (!targetNode && curDragNodes[i].dropRoot === false) {
-            return false;
-          } else if (curDragNodes[i].parentTId && curDragNodes[i].getParentNode() !== targetNode && curDragNodes[i].getParentNode().childOuter === false) {
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-    function dropNext(treeId, nodes, targetNode) {
-      var pNode = targetNode.getParentNode();
-      if (pNode && pNode.dropInner === false) {
-        return false;
-      } else {
-        for (var i=0,l=curDragNodes.length; i<l; i++) {
-          var curPNode = curDragNodes[i].getParentNode();
-          if (curPNode && curPNode !== targetNode.getParentNode() && curPNode.childOuter === false) {
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-   
-    var log, className = "dark", curDragNodes, autoExpandNode;
-    function beforeDrag(treeId, treeNodes) {
-      className = (className === "dark" ? "":"dark");
-      for (var i=0,l=treeNodes.length; i<l; i++) {
-        if (treeNodes[i].drag === false) {
-          curDragNodes = null;
-          return false;
-        } else if (treeNodes[i].parentTId && treeNodes[i].getParentNode().childDrag === false) {
-          curDragNodes = null;
-          return false;
-        }
-      }
-      curDragNodes = treeNodes;
-      return true;
-    }
-    function beforeDragOpen(treeId, treeNode) {
-      autoExpandNode = treeNode;
-      return true;
-    }
-    function beforeDrop(treeId, treeNodes, targetNode, moveType, isCopy) {
-      className = (className === "dark" ? "":"dark");
-      return true;
-    }
-    function onDrag(event, treeId, treeNodes) {
-      className = (className === "dark" ? "":"dark");
-    }
-    function onDrop(event, treeId, treeNodes, targetNode, moveType, isCopy) {
-
-    }
-
-    function onExpand(event, treeId, treeNode) {
-      if (treeNode === autoExpandNode) {
-        className = (className === "dark" ? "":"dark");
-      }
     }
 
     //由于是数据交互是非阻塞的 手动删除节点
     function beforeRemove(treeId, treeNode) {
       var zTree = $.fn.zTree.getZTreeObj("treeDemo");
       zTree.selectNode(treeNode);
-      if(1){
-        window.location.reload()
-        return false;        
-      }
+
       if(treeNode.level == '0'){
         layer.msg('不能删除根节点');
         return false;
       }
-      layer.confirm('确定删除'+treeNode.name+'吗？', function(index) {
-        admin.req({
-          url: ''
-          ,data: {id:treeNode.id}
-          ,type: 'post'
-          ,done: function(res){
-            if(res.code == '0'){
-              layer.msg(res.msg);
-              return false;
-            }
-            layer.msg(res.msg);
-          }
-        });  
+      deleteDepartment(treeNode.id);
 
-        layer.close(index);
-        zTree.removeNode(treeNode);
-        return true;
-      });
       return false;
     }
 
     function zTreeBeforeEditName(treeId, treeNode) {
       editorDepartment(treeNode.id);
       return !treeNode.isParent;
-    }
-
-    //编辑节点名称    
-    function beforeRename(treeId, treeNode, newName) {
-      newName = $.trim(newName);
-      if(loguseradminid!=useradminid){
-        window.location.reload()
-        return false;        
-      }
-      if (newName.length == 0) {
-        setTimeout(function() {
-          var zTree = $.fn.zTree.getZTreeObj("treeDemo");
-          zTree.cancelEditName();
-          layer.alert('节点名称不能为空');
-        }, 0);
-        return false;
-      }
-      var zTree = $.fn.zTree.getZTreeObj("treeDemo");
-      zTree.selectNode(treeNode);
-      admin.req({
-        url: ''
-        ,data: {name:newName,id:treeNode.id,proid:'{$info.id}'}
-        ,type: 'post'
-        ,done: function(res){
-          if(res.code == '0'){
-            layer.msg(res.msg);
-            return false;
-          }
-          layer.msg(res.msg, {
-            offset: '15px'
-            ,icon: 1
-            ,time: 1000
-          }, function(){
-            treeNode.name = newName;
-            treeObj.updateNode(treeNode);
-            window.location.reload();
-            return false;
-          });
-        }
-      });   
-      return true;
     }
     
     /**************打开弹窗 ***************/
@@ -310,34 +141,33 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
             view(this.id).render('department/editor', {
                 id: id
             }).done(function () {
-                form.render(null, 'operator-update-form-update');
+                form.render(null, 'department-update-form-update');
             });
         },
         yes: function (index, layero) {
             //点击确认触发 iframe 内容中的按钮提交
-            var submit = $("#operator-update-submit-update");
+            var submit = $("#department-update-submit-update");
             submit.click();
         }
       });
     }
 
-    function deleteDepartment(data) {
-      let url = '/department.action?command=delete&id='+data.id
+    function deleteDepartment(id) {
+      let url = 'department/delete?id='+id
       layer.confirm('确定删除吗？', function(index){
         admin.req({
-          url: '/department.action?command=delete&id='+data.id
+          url: url
           ,done: function(res){
-            if(res.status != '0'){
+            if(res.code != '0'){
               layer.msg('删除失败');
               return false;
             }
-            klt_department.deleteNode(data.id);
+            klt_department.deleteNode(id);
             layer.msg('删除成功', {
               offset: '15px'
               ,icon: 1
               ,time: 1000
             }, function(){
-              layui.table.reload('Filter-table-department'); //重载表格
               layer.close(index); //执行关闭 
             });
           }
@@ -364,9 +194,13 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
           "X-Token": layui.data(setter.tableName)[setter.request.tokenName]
         }
         ,cols: [[
-          {field: 'name', title: '部门名称'}
-          ,{field: 'm_name', title: '部门经理'}
-          ,{field: 'remark', title: '备注'}
+          {field: 'nickname', title: '员工姓名'}
+          ,{field: 'manager_id', title: '是否经理', templet:function(d){
+            if(d.manager_id > 0){return '是';}else{return '否';}
+          }}
+          ,{field: 'state', title: '部门类型', templet:function(d){
+            if(d.state==1){return '可用';}else{return '禁用';}
+          }}
           ,{field: 'created_at', title: '创建时间', sort: true}
           ,{title: '操作', width: 150, align: 'center', fixed: 'right', toolbar: '#ID_table_toolbar_department'}
         ]]
@@ -385,19 +219,19 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
       if(obj.event === 'del'){
         layer.confirm('确定删除吗？', function(index){
             admin.req({
-              url: '/department.action?command=delete&id='+data.id
+              url: 'user/delete?id='+data.id
               ,done: function(res){
-                if(res.status != '0'){
+                if(res.code != '0'){
                   layer.msg('删除失败');
                   return false;
                 }
-                klt_department.deleteNode(data.id);
+                klt_department.clickNode(data.department_id);
+
                 layer.msg('删除成功', {
                   offset: '15px'
                   ,icon: 1
                   ,time: 1000
                 }, function(){
-                  layui.table.reload('Filter-table-department'); //重载表格
                   layer.close(index); //执行关闭 
                 });
               }
@@ -405,43 +239,23 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
         });
       }else if(obj.event === 'edit'){
         admin.popup({
-          title: '编辑'
-          ,area: ['500px', '480px']
-          ,id: 'LAY-popup-user-add'
-          ,success: function(layero, index){
-            view(this.id).render('department/form', data).done(function(){
-              form.render(null, 'Filter-form-department');
-              
-              //监听提交
-              form.on('submit(Filter-form-sumbit-department)', function(data){
-                var field = data.field; //获取提交的字段
-
-                //提交 Ajax 成功后，关闭当前弹层并重载表格
-                //$.ajax({});
-                admin.req({
-                  url: '/department.action?command=edit' //实际使用请改成服务端真实接口
-                  ,type: 'post'
-                  ,data: field            
-                  ,done: function(res){
-                    if (res.status != '0') {
-                      layer.msg('编辑失败');
-                      return false;
-                    }
-                    klt_department.updateNode(field.id,field);
-                    //登入成功的提示与跳转
-                    layer.msg('编辑成功', {
-                      offset: '15px'
-                      ,icon: 1
-                      ,time: 1000
-                      }, function(){
-                        layui.table.reload('Filter-table-department'); //重载表格
-                        layer.close(index); //执行关闭 
-                    });
-                  }
-                });
-                
+          title: '编辑员工',
+          area: ['675px', '550px'],
+          id: 'LAY-popup-user-add',
+          btn: ['确定', '取消'],
+          btnAlign: 'c',
+          success: function (layero, index) {
+              layui.admin.INDEXS = index;
+              view(this.id).render('member/editor', {
+                  id: data.id
+              }).done(function () {
+                  form.render(null, 'member-update-form-update');
               });
-            });
+          },
+          yes: function (index, layero) {
+              //点击确认触发 iframe 内容中的按钮提交
+              var submit = $("#member-update-submit-update");
+              submit.click();
           }
         });
       }
@@ -451,13 +265,16 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
 
     //新增节点
     klt_department.addNode = function(pid,node) {
+      console.log(pid);
       var treeObj = $.fn.zTree.getZTreeObj("treeDemo");
       var pnode = treeObj.getNodeByParam("id", pid, null);
+
       childnode = pnode.children;
       if (childnode && childnode.length > 0) {
         node.isParent = true;
         newNode = treeObj.addNodes(pnode,0, node);
-      }   
+      }
+      treeObj.expandAll(true);   
     };
 
     //修改节点
@@ -473,7 +290,14 @@ layui.define(['admin','table','jqZtreeCore'], function(exports){
       var treeObj = $.fn.zTree.getZTreeObj("treeDemo");
       var newnode = treeObj.getNodeByParam("id", id, null);
       treeObj.removeNode(newnode);
+      treeObj.expandAll(true);
     };
+
+    klt_department.clickNode = function(id) {
+      var obj = $.fn.zTree.getZTreeObj("treeDemo");
+      var node = obj.getNodeByParam("id", id, null);
+      setting.callback.onClick(null, obj.setting.treeId, node);
+    }
 
 
     exports('department', klt_department);

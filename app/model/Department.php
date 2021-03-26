@@ -20,7 +20,7 @@ class Department extends Model
     protected $queryShowField = ['id', 'parent_id', 'dept_name as name', 'created_at'];
 
     protected $queryOrderField = [
-        ['id', 'desc']
+        ['parent_id', 'asc']
     ];
 
     protected $queryGroupField = '';
@@ -45,7 +45,7 @@ class Department extends Model
             'company_id' => $this->userData['company_id'],
             'dept_name' => $data['dept_name'],
             'parent_id' => $data['parent_id'],
-            'manager_id' => $data['manager_id'] ?? 0,
+            'manager_id' => !empty($data['manager_id']) ? $data['manager_id'] : 0,
             'created_by' => $this->userData['username'],
             'created_at' => date('Y-m-d H:i:s')
         ];
@@ -66,6 +66,7 @@ class Department extends Model
         $result = $this->insert($data);
 
         if ($result) {
+            $data['id'] = $result;
             return $data;
         }
 
@@ -91,7 +92,7 @@ class Department extends Model
         $init = [
             'dept_name' => $data['dept_name'],
             'parent_id' => $data['parent_id'],
-            'manager_id' => $data['manager_id'] ?? 0,
+            'manager_id' => !empty($data['manager_id']) ? $data['manager_id'] : 0,
             'updated_by' => $this->userData['username'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -99,6 +100,10 @@ class Department extends Model
         $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $data['id'])->find();
         if (!$exists) {
             throw new InvalidRequestException('部门不存在');
+        }
+
+        if ($exists['parent_id'] == '0') {
+            throw new InvalidRequestException('顶级部门不能修改');
         }
 
         
@@ -167,6 +172,10 @@ class Department extends Model
         $exists = $this->where('company_id', '=', $this->userData['company_id'])->where('id', '=', $id)->find();
         if (empty($exists)) {
             throw new InvalidRequestException('查询不到该数据');
+        }
+
+        if ($exists['parent_id'] == '0') {
+            throw new InvalidRequestException('顶级部门不能删除');
         }
         //部门下有员工，则无法删除
         $user = new User();

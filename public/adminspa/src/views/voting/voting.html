@@ -1,0 +1,111 @@
+<title>投票列表</title>
+<div class="layui-fluid">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md12">
+      <div class="layui-card">
+        <div class="layui-card-header layuiadmin-card-header-auto button_add_pd">
+          <!-- <div class="layui-form-item">
+            <div>
+              <button class="layui-btn layui-btn-normal layuiadmin-btn-list" data-type="add">新建</button>
+            </div>
+          </div> -->
+        </div>
+        <div class="layui-card-body table_pd">
+          <table class="layui-hide" id="alarm-index-table-1" lay-filter="alarm-index-table-1"></table>
+          
+          <script type="text/html" id="alarm-index-table-1-barDemo">
+            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="detail">详情</a>
+            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="voting">参与经理</a>
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+layui.use(['index', 'table'], function(){
+  var table = layui.table
+  ,form = layui.form
+  ,api = layui.api
+  ,view = layui.view
+  ,admin = layui.admin
+  ,setter = layui.setter
+  ,$ = layui.$;
+
+  table.render({
+    elem: '#alarm-index-table-1'
+    ,url: 'voting/voting'
+    ,method: 'post'
+    ,where: {
+      "X-Token": layui.data(setter.tableName)[setter.request.tokenName]
+    }
+    ,cellMinWidth: 80 
+    ,height: 'full-180'
+    ,limit:20
+    ,cols: [[
+      {field:'year',width:170, title: '年份'}
+      ,{field:'quarter',width:270, title: '季度',templet: function(d){           
+        return d.quarter + '季度';
+      }}
+      ,{field: 'qcount', width:300, title: '投票次数'}
+      ,{field: 'qsum', title: '总投票分数'}
+      ,{width:180, title: '操作', align:'center', fixed: 'right', toolbar: '#alarm-index-table-1-barDemo'}
+    ]]
+    ,page: true
+  });
+  
+  //监听工具条
+  table.on('tool(alarm-index-table-1)', function(obj){
+    var data = obj.data;
+    console.log(data);
+    if(obj.event === 'detail'){
+      admin.popup({
+          title: '投票详情',
+          area: ['900px', '550px'],
+          id: 'LAY-popup-user-edit',
+          btnAlign: 'c',
+          success: function (layero, index) {
+              layui.admin.INDEXS = index;
+              console.log(data);
+              view(this.id).render('voting/detail', {
+                  year: data.year,
+                  quarter: data.quarter,
+              }).done(function () {
+                  
+              });
+          },
+          yes: function (index, layero) {
+              
+          },
+          cancel: function(index, layero){ 
+            layer.close(index);
+          } 
+      });
+    } else if(obj.event === 'voting'){
+      admin.popup({
+          title: '参与经理',
+          area: ['700px', '550px'],
+          id: 'LAY-popup-user-edit',
+          btnAlign: 'c',
+          success: function (layero, index) {
+              layui.admin.INDEXS = index;
+              console.log(data);
+              view(this.id).render('voting/voted', {
+                  year: data.year,
+                  quarter: data.quarter,
+              }).done(function () {
+                  
+              });
+          },
+          yes: function (index, layero) {
+              
+          },
+          cancel: function(index, layero){ 
+            layer.close(index);
+          } 
+      });
+    }
+  }); 
+});
+</script>

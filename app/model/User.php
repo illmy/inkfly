@@ -3,6 +3,7 @@
 namespace app\model;
 
 use app\exceptions\InvalidRequestException;
+use app\model\AuthGroup;
 
 class User extends Model
 {
@@ -16,9 +17,23 @@ class User extends Model
 
     protected $table = 'users';
 
+    protected $queryWhereField = [
+        ['u.department_id', '=', '%VALUE%'],
+    ];
+
+    protected $queryShowField = ['u.id', 'u.nickname', 'd.manager_id', 'u.created_at', 'u.state', 'u.department_id'];
+
+    public function beforeList($query = [])
+    {
+        $this->alias('u');
+        $this->leftJoin('departments as d', 'u.id', 'd.manager_id');
+        $this->where('u.company_id', '=', $this->userData['company_id']);
+
+    }
+
     public function Login(string $username, string $password)
     {
-        $field = ['username', 'password', 'nickname', 'id', 'department_id', 'company_id'];
+        $field = ['username', 'password', 'nickname', 'id', 'department_id', 'company_id', 'state'];
         $list = $this->field($field)->where('username', '=', $username)->find();
 
         if (empty($list)) {
@@ -58,6 +73,7 @@ class User extends Model
             'username' => $data['username'],
             'password' => md5($data['password']),
             'nickname' => $data['nickname'],
+            'state' => self::USER_STATE_ENABLE,
             'department_id' => $data['department_id'],
             'company_admin' => $data['company_admin'],
             'created_by' => $this->userData['username'],
@@ -73,6 +89,7 @@ class User extends Model
         $result = $this->insert($data);
 
         if ($result) {
+            (new AuthGroup)->bindUserGroup($result);
             unset($data['password']);
             return $data;
         }
@@ -82,7 +99,7 @@ class User extends Model
 
     public function info(string $id) 
     {
-        $field = ['company_id', 'username', 'nickname', 'department_id', 'company_admin'];
+        $field = ['company_id', 'username', 'nickname', 'department_id', 'company_admin', 'id'];
         $exists = $this->where('company_id', '=', $this->userData['company_id'])
                         ->where('id', '=', $id)
                         ->field($field)
@@ -113,7 +130,7 @@ class User extends Model
             $data['company_admin'] = self::NO_ADMIN;
         }
 
-        $data = [
+        $init = [
             'nickname' => $data['nickname'],
             'department_id' => $data['department_id'],
             'company_admin' => $data['company_admin'] ?? 0,
@@ -126,7 +143,12 @@ class User extends Model
             throw new InvalidRequestException('员工不存在');
         }
 
-        return $this->where('id', '=', $data['id'])->update($data);
+        $result = $this->where('id', '=', $data['id'])->update($init);
+        if ($result) {
+            return $data;
+        }
+
+        throw new InvalidRequestException("编辑失败");  
     }
 
 
@@ -142,9 +164,14 @@ class User extends Model
         return $exists;
     }
 
+    /**
+     * 获取所有经理
+     *
+     * @return array
+     */
     public function getAllManager()
     {
-        $sql = "select * from users where id in (select manager_id from departments where manager_id > 0)";
+        $sql = "select id, username, nickname from users where id in (select manager_id from departments where manager_id > 0)";
 
         $list = $this->query($sql);
 

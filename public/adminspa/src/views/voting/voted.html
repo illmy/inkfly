@@ -1,0 +1,97 @@
+<title>参与经理</title>
+<div class="layui-fluid">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md12">
+      <div class="layui-card">
+        <div class="layui-card-header layuiadmin-card-header-auto button_add_pd">
+            
+          <div class="layui-form-item">
+            <div>
+                <span id="voting-year"></span> <span id="voting-quarter"></span>
+            </div>
+          </div>
+        </div>
+        <div class="layui-card-body table_pd">
+          <table class="layui-hide" id="alarm-index-table-managers" lay-filter="alarm-index-table-managers"></table>
+          <script type="text/html" id="alarm-index-table-1-managers">
+            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="voting">投票</a>
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/html" template>
+  {{# 
+    getDetail(d.params);
+  }}
+</script>
+<script>
+function getDetail(d) {
+  layui.use(['index', 'table'], function(){
+  var table = layui.table
+  ,form = layui.form
+  ,api = layui.api
+  ,view = layui.view
+  ,admin = layui.admin
+  ,setter = layui.setter
+  ,$ = layui.$;
+
+  $("#voting-year").text(d.year + '年');
+  $("#voting-quarter").text(d.quarter + '季度');
+  getTable();
+  function getTable() {
+    table.render({
+      elem: '#alarm-index-table-managers'
+      ,url: 'voting/manager'
+      ,method: 'get'
+      ,where: {
+        "X-Token": layui.data(setter.tableName)[setter.request.tokenName]
+      }
+      ,cellMinWidth: 80 
+      ,height: 'full-180'
+      ,limit:20
+      ,cols: [[
+        ,{field: 'nickname', title: '部门经理'}
+        ,{twidth:380, title: '操作', align:'center', fixed: 'right', toolbar: '#alarm-index-table-1-managers'}
+      ]]
+      ,page: false
+    });
+  }
+
+   //监听工具条
+   table.on('tool(alarm-index-table-managers)', function(obj){
+    var data = obj.data;
+    if(obj.event === 'voting'){
+      console.log(obj.event);
+      admin.popup({
+          title: '投票',
+          area: ['500px', '360px'],
+          id: 'LAY-popup-user-edits',
+          btn: ['确定', '取消'],
+          btnAlign: 'c',
+          success: function (layero, index) {
+              layui.admin.INDEXS = index;
+              console.log(data);
+              view(this.id).render('voting/create', {
+                  year: d.year,
+                  quarter: d.quarter,
+                  manager_id: data.id
+              });
+          },
+          yes: function (index, layero) {
+                //点击确认触发 iframe 内容中的按钮提交
+              var submit = $("#voting-add-submit-add");
+              submit.click();
+          },
+          cancel: function(index, layero){ 
+            layer.close(index);
+          } 
+      });
+    }
+  });
+  
+});
+}
+
+</script>

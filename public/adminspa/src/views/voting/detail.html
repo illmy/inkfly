@@ -1,0 +1,65 @@
+<title>投票详情</title>
+<div class="layui-fluid">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md12">
+      <div class="layui-card">
+        <div class="layui-card-header layuiadmin-card-header-auto button_add_pd">
+          <!-- <div class="layui-form-item">
+            <div>
+              <button class="layui-btn layui-btn-normal layuiadmin-btn-list" data-type="add">新建</button>
+            </div>
+          </div> -->
+        </div>
+        <div class="layui-card-body table_pd">
+          <table class="layui-hide" id="alarm-index-table-detail" lay-filter="alarm-index-table-detail"></table>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/html" template>
+  {{# 
+    getDetail(d.params);
+  }}
+</script>
+<script>
+function getDetail(d) {
+  layui.use(['index', 'table'], function(){
+  var table = layui.table
+  ,form = layui.form
+  ,api = layui.api
+  ,view = layui.view
+  ,admin = layui.admin
+  ,setter = layui.setter
+  ,$ = layui.$;
+
+  getTable();
+  function getTable() {
+    table.render({
+      elem: '#alarm-index-table-detail'
+      ,url: 'voting/vdetails?year='+d.year+'&quarter='+d.quarter
+      ,method: 'get'
+      ,where: {
+        "X-Token": layui.data(setter.tableName)[setter.request.tokenName]
+      }
+      ,cellMinWidth: 80 
+      ,height: 'full-180'
+      ,limit:20
+      ,cols: [[
+        {field:'year',width:120, title: '年份'}
+        ,{field:'quarter',width:170, title: '季度',templet: function(d){           
+          return d.quarter + '季度';
+        }}
+        ,{field: 'nickname', width:100, title: '部门经理'}
+        ,{field: 'voting_score', title: '投票分数'}
+        ,{field: 'created_at', title: '投票时间'}
+      ]]
+      ,page: false
+    });
+  }
+  
+});
+}
+
+</script>
